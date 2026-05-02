@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>日本七日纪行 · 行程地图</title>
+
+<!-- Leaflet CSS/JS via CDN -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<!-- Google Fonts -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@500;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+
+<style>
+  :root {
+    --paper: #F5F1EA;
+    --paper-dark: #EBE5D6;
+    --ink: #1C1C1C;
+    --ink-light: #5A5A5A;
+    --ink-pale: #8A8A8A;
+    --rule: #C9C0AC;
+    --accent: #B83A3A;
+
+    --d1: #B83A3A;  /* 朱红 */
+    --d2: #8B2E2E;  /* 海老茶 */
+    --d3: #4A6B5C;  /* 松叶绿 */
+    --d4: #2C3E5C;  /* 藏青 */
+    --d5: #6B4C7A;  /* 葡萄紫 */
+    --d6: #8B5A2B;  /* 焦茶 */
+    --d7: #C4912F;  /* 山吹 */
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0; padding: 0;
+    height: 100%;
+    font-family: 'Noto Sans JP', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    background: var(--paper);
+    color: var(--ink);
+  }
+
+  #app {
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  /* ---- 侧栏 ---- */
+  #sidebar {
+    width: 320px;
+    flex-shrink: 0;
+    background: var(--paper);
+    border-right: 1px solid var(--rule);
+    overflow-y: auto;
+    padding: 24px 22px;
+  }
+
+  .header {
+    border-bottom: 1px solid var(--ink);
+    padding-bottom: 14px;
+    margin-bottom: 18px;
+  }
+  .header .badge {
+    display: inline-block; vertical-align: middle;
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--accent);
+    margin-right: 8px;
+  }
+  .header .small {
+    font-size: 11px;
+    color: var(--ink-light);
+    letter-spacing: 4px;
+    margin-bottom: 6px;
+    font-weight: 500;
+  }
+  .header h1 {
+    font-family: 'Noto Serif JP', serif;
+    font-size: 26px;
+    margin: 0;
+    font-weight: 700;
+    letter-spacing: 1px;
+  }
+  .header .date {
+    font-size: 12px;
+    color: var(--ink-pale);
+    margin-top: 8px;
+    letter-spacing: 2px;
+    font-style: italic;
+  }
+
+  .section-label {
+    font-size: 10px;
+    color: var(--ink-light);
+    letter-spacing: 6px;
+    font-weight: 700;
+    margin: 18px 0 10px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .day-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  .day-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 0.15s;
+    user-select: none;
+  }
+  .day-item:hover {
+    background: var(--paper-dark);
+  }
+  .day-item.muted {
+    opacity: 0.35;
+  }
+  .day-item .dot {
+    width: 12px; height: 12px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    border: 2px solid var(--paper);
+    box-shadow: 0 0 0 1.5px var(--ink-pale);
+  }
+  .day-item .info {
+    flex: 1;
+    min-width: 0;
+  }
+  .day-item .info .date-line {
+    font-size: 11px;
+    color: var(--ink-light);
+    letter-spacing: 1px;
+    font-weight: 700;
+    margin-bottom: 2px;
+  }
+  .day-item .info .title-line {
+    font-size: 13px;
+    color: var(--ink);
+    line-height: 1.3;
+  }
+  .day-item .check {
+    color: var(--accent);
+    font-size: 11px;
+    visibility: visible;
+  }
+  .day-item.muted .check { visibility: hidden; }
+
+  .controls {
+    display: flex;
+    gap: 8px;
+    margin-top: 14px;
+  }
+  .controls button {
+    flex: 1;
+    background: transparent;
+    border: 1px solid var(--ink);
+    color: var(--ink);
+    padding: 8px 10px;
+    font-size: 11px;
+    letter-spacing: 2px;
+    font-family: inherit;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .controls button:hover {
+    background: var(--ink);
+    color: var(--paper);
+  }
+
+  .footer {
+    margin-top: 28px;
+    padding-top: 14px;
+    border-top: 1px solid var(--rule);
+    font-size: 10px;
+    color: var(--ink-pale);
+    letter-spacing: 2px;
+    line-height: 1.7;
+  }
+  .footer .icho {
+    color: var(--accent);
+    margin-right: 6px;
+  }
+
+  /* ---- 地图 ---- */
+  #map {
+    flex: 1;
+    height: 100%;
+    background: #DDE3E5;
+  }
+
+  /* Leaflet 标记编号样式 */
+  .marker-pin {
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    background: var(--accent);
+    border: 3px solid var(--paper);
+    box-shadow: 0 0 0 1px rgba(0,0,0,0.15), 0 2px 6px rgba(0,0,0,0.2);
+    color: var(--paper);
+    font-weight: 700;
+    font-family: 'Noto Sans JP', sans-serif;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+  }
+
+  /* 弹出框样式覆盖 */
+  .leaflet-popup-content-wrapper {
+    background: var(--paper);
+    border-radius: 4px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+    border: 1px solid var(--rule);
+  }
+  .leaflet-popup-content {
+    margin: 14px 16px;
+    font-family: 'Noto Sans JP', sans-serif;
+    color: var(--ink);
+    line-height: 1.5;
+  }
+  .leaflet-popup-tip {
+    background: var(--paper);
+    border: 1px solid var(--rule);
+  }
+  .popup .day-tag {
+    display: inline-block;
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--paper);
+    background: var(--accent);
+    padding: 2px 8px;
+    margin-bottom: 8px;
+    font-weight: 700;
+  }
+  .popup h3 {
+    margin: 0 0 4px 0;
+    font-family: 'Noto Serif JP', serif;
+    font-size: 16px;
+    font-weight: 700;
+  }
+  .popup .meta {
+    font-size: 11px;
+    color: var(--ink-light);
+    margin-bottom: 6px;
+    letter-spacing: 1px;
+  }
+  .popup .notes {
+    font-size: 12px;
+    color: var(--ink-light);
+    line-height: 1.5;
+    border-top: 1px solid var(--rule);
+    padding-top: 8px;
+    margin-top: 8px;
+  }
+
+  /* 移动端 */
+  @media (max-width: 720px) {
+    #app { flex-direction: column; }
+    #sidebar {
+      width: 100%;
+      max-height: 45vh;
+      border-right: none;
+      border-bottom: 1px solid var(--rule);
+    }
+    #map { flex: 1; min-height: 55vh; }
+  }
+
+  /* Attribution 字体 */
+  .leaflet-control-attribution {
+    background: rgba(245, 241, 234, 0.85) !important;
+    font-size: 10px !important;
+    font-family: 'Noto Sans JP', sans-serif !important;
+  }
+</style>
+</head>
+<body>
+
+<div id="app">
+  <aside id="sidebar">
+    <div class="header">
+      <div class="small"><span class="badge"></span>JOURNEY · 七日纪行</div>
+      <h1>日本 · 关西—东京</h1>
+      <div class="date">5/13 — 5/19  ·  7 DAYS</div>
+    </div>
+
+    <div class="section-label">DAYS · 行程筛选</div>
+    <ul class="day-list" id="dayList"></ul>
+
+    <div class="controls">
+      <button id="btnAll">全部</button>
+      <button id="btnFit">缩放至</button>
+    </div>
+
+    <div class="footer">
+      <div><span class="icho">●</span>点击地点查看详情</div>
+      <div><span class="icho">●</span>点击日期筛选行程</div>
+      <div style="margin-top:10px; font-style:italic;">一期一会 · ICHI-GO ICHI-E</div>
+    </div>
+  </aside>
+
+  <div id="map"></div>
+</div>
+
+<script>
+// ---------- 行程数据 ----------
+const DAYS = [
+  {
+    id: 1, date: "5/13", dateEN: "TUE", title: "大阪 · 抵达与心斋桥",
+    color: "var(--d1)", colorHex: "#B83A3A",
+    points: [
+      { name: "関西国際空港 / 关西机场", lon: 135.2366019, lat: 34.4319994,
+        time: "中午抵达", note: "Haruka 特急或南海电铁前往难波，约 45 分钟" },
+      { name: "心斎橋 / 心斋桥", lon: 135.5013862, lat: 34.6708677,
+        time: "下午", note: "顶棚拱廊商店街，时尚百货与美食一应俱全" },
+      { name: "道頓堀 / 道顿堀", lon: 135.5030983, lat: 34.6686471,
+        time: "傍晚", note: "格力高招牌、夜景、章鱼烧、御好烧" },
+    ],
+  },
+  {
+    id: 2, date: "5/14", dateEN: "WED", title: "大阪 → 京都 · 古城与稻荷",
+    color: "var(--d2)", colorHex: "#8B2E2E",
+    points: [
+      { name: "大阪城公園 / 大阪城公园", lon: 135.5262114, lat: 34.6864797,
+        time: "08:00–10:30", note: "晨间游客少，登天守阁眺望" },
+      { name: "京都駅 / 京都站", lon: 135.7587667, lat: 34.985849,
+        time: "12:30", note: "11:30 出发，JR 新快速约 30 分钟，寄存行李" },
+      { name: "伏見稲荷大社 / 伏见稻荷", lon: 135.7791876, lat: 34.9676945,
+        time: "下午", note: "千本鸟居，可登半山远望京都" },
+      { name: "鴨川・三条大橋 / 鸭川", lon: 135.7718123, lat: 35.0090538,
+        time: "傍晚", note: "河畔散步，夕阳与凉风" },
+    ],
+  },
+  {
+    id: 3, date: "5/15", dateEN: "THU", title: "京都北线 · 三千院与贵船",
+    color: "var(--d3)", colorHex: "#4A6B5C",
+    points: [
+      { name: "三千院 / 三千院", lon: 135.8344058, lat: 35.119726,
+        time: "09:00", note: "07:30 出发，大原山中，苔庭与地藏菩萨" },
+      { name: "瑠璃光院 / 瑠璃光院", lon: 135.8085416, lat: 35.0635789,
+        time: "中午", note: "叡山电铁本线到宝池站，书院倒影名景，需预约" },
+      { name: "貴船神社 / 贵船神社", lon: 135.7629101, lat: 35.1220909,
+        time: "下午", note: "再坐叡山电铁鞍马线，红灯笼石阶与水占卜" },
+    ],
+  },
+  {
+    id: 4, date: "5/16", dateEN: "FRI", title: "京都 → 东京 · 一日双城",
+    color: "var(--d4)", colorHex: "#2C3E5C",
+    points: [
+      { name: "清水寺 / 清水寺", lon: 135.784661, lat: 34.9946662,
+        time: "07:00", note: "晨间早入避人潮，本堂悬空舞台" },
+      { name: "二三年坂 / 二三年坂", lon: 135.7808578, lat: 34.9981744,
+        time: "08:30", note: "石板坡道，京都町屋风情" },
+      { name: "八坂神社 / 八坂神社", lon: 135.7785534, lat: 35.0036559,
+        time: "10:00", note: "祇园入口的朱红西楼门" },
+      { name: "祇園 / 祇园", lon: 135.777245, lat: 35.0037816,
+        time: "11:00", note: "花见小路，午餐结束京都行程" },
+      { name: "東京駅 / 东京站", lon: 139.7670658, lat: 35.6812996,
+        time: "16:00", note: "13:00 京都站乘新干线 Nozomi，约 2h15min" },
+      { name: "銀座 / 银座", lon: 139.7664859, lat: 35.6712228,
+        time: "17:00", note: "和光时钟塔、伊东屋、高级百货" },
+      { name: "東京タワー / 东京塔", lon: 139.7454329, lat: 35.6585805,
+        time: "20:00", note: "夜景登塔，推荐天台展望" },
+    ],
+  },
+  {
+    id: 5, date: "5/17", dateEN: "SAT", title: "东京东线 · 浅草至涩谷",
+    color: "var(--d5)", colorHex: "#6B4C7A",
+    points: [
+      { name: "雷門 / 雷门", lon: 139.7963656, lat: 35.7111163,
+        time: "08:00", note: "08:00 早到避人潮，浅草寺地标大灯笼" },
+      { name: "浅草寺 / 浅草寺", lon: 139.7966553, lat: 35.7147651,
+        time: "08:30", note: "经仲见世商店街参拜，传统和果子" },
+      { name: "秋葉原 / 秋叶原", lon: 139.7713703, lat: 35.6996473,
+        time: "中午", note: "电器街、动漫游戏圣地" },
+      { name: "渋谷スクランブル / 涩谷十字路口", lon: 139.7005596, lat: 35.659482,
+        time: "傍晚", note: "世界最繁忙的人行横道" },
+      { name: "Shibuya Sky", lon: 139.7019848, lat: 35.6586719,
+        time: "日落前 1h", note: "需提前预约，日落最佳时刻" },
+    ],
+  },
+  {
+    id: 6, date: "5/18", dateEN: "SUN", title: "东京迪士尼 · 整日游园",
+    color: "var(--d6)", colorHex: "#8B5A2B",
+    points: [
+      { name: "東京ディズニーランド / 迪士尼乐园", lon: 139.8803943, lat: 35.6328964,
+        time: "09:00 入园", note: "经典童话主题，开园冲热门项目（Disneyland 与海洋二选一）" },
+      { name: "東京ディズニーシー / 迪士尼海洋", lon: 139.8850779, lat: 35.6267108,
+        time: "09:00 入园", note: "世界唯一，沉浸感最强（Disneyland 与海洋二选一）" },
+    ],
+  },
+  {
+    id: 7, date: "5/19", dateEN: "MON", title: "东京西线 → 成田归国",
+    color: "var(--d7)", colorHex: "#C4912F",
+    points: [
+      { name: "恵比寿 / 惠比寿", lon: 139.7100818, lat: 35.6467145,
+        time: "08:00", note: "高级感咖啡街区，早餐散步" },
+      { name: "中目黒 / 中目黑", lon: 139.7026251, lat: 35.6387161,
+        time: "09:00", note: "目黑川河岸文艺小店" },
+      { name: "表参道 / 表参道", lon: 139.707743, lat: 35.667355,
+        time: "11:00", note: "建筑名所与精品店" },
+      { name: "原宿・竹下通 / 原宿", lon: 139.7051821, lat: 35.6710335,
+        time: "12:00", note: "原宿青年文化集中地，伴手礼/轻购物" },
+      { name: "成田国際空港 / 成田机场", lon: 140.3843215, lat: 35.770178,
+        time: "下午", note: "Narita Express 约 1h，免税店采购后归国" },
+    ],
+  },
+];
+
+// ---------- 初始化地图 ----------
+const map = L.map('map', {
+  zoomControl: true,
+  attributionControl: true,
+  preferCanvas: true,
+}).setView([35.5, 137.0], 6);
+
+// 米色简洁风格瓦片
+L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+  attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
+  subdomains: 'abcd',
+  maxZoom: 19,
+}).addTo(map);
+
+// ---------- 渲染所有图层 ----------
+const dayLayers = {};       // id -> L.LayerGroup
+const visibleDays = new Set(DAYS.map(d => d.id));
+
+function makeNumberIcon(num, colorHex) {
+  return L.divIcon({
+    className: '',
+    iconSize: [30, 30],
+    iconAnchor: [15, 15],
+    popupAnchor: [0, -15],
+    html: `<div class="marker-pin" style="background:${colorHex}">${num}</div>`,
+  });
+}
+
+function buildDayLayer(day) {
+  const group = L.layerGroup();
+  const coords = day.points.map(p => [p.lat, p.lon]);
+
+  // 路线
+  if (coords.length >= 2) {
+    L.polyline(coords, {
+      color: day.colorHex,
+      weight: 3,
+      opacity: 0.7,
+      dashArray: '8, 6',
+    }).addTo(group);
+  }
+
+  // 标记
+  day.points.forEach((p, i) => {
+    const marker = L.marker([p.lat, p.lon], {
+      icon: makeNumberIcon(i + 1, day.colorHex),
+    });
+    const html = `
+      <div class="popup">
+        <div class="day-tag" style="background:${day.colorHex}">DAY ${day.id} · ${day.date}</div>
+        <h3>${i + 1}. ${p.name}</h3>
+        <div class="meta">${p.time || ''}</div>
+        ${p.note ? `<div class="notes">${p.note}</div>` : ''}
+      </div>
+    `;
+    marker.bindPopup(html, { maxWidth: 280 });
+    marker.addTo(group);
+  });
+
+  return group;
+}
+
+DAYS.forEach(day => {
+  const layer = buildDayLayer(day);
+  layer.addTo(map);
+  dayLayers[day.id] = layer;
+});
+
+// ---------- 侧栏列表 ----------
+const ul = document.getElementById('dayList');
+DAYS.forEach(day => {
+  const li = document.createElement('li');
+  li.className = 'day-item';
+  li.dataset.id = day.id;
+  li.innerHTML = `
+    <span class="dot" style="background:${day.colorHex}"></span>
+    <div class="info">
+      <div class="date-line">${day.date} · ${day.dateEN}</div>
+      <div class="title-line">${day.title}</div>
+    </div>
+    <span class="check">●</span>
+  `;
+  li.addEventListener('click', (e) => {
+    const id = day.id;
+    if (visibleDays.has(id)) {
+      // 单击若仅自己显示则全选；否则关掉自己
+      if (visibleDays.size === 1) {
+        DAYS.forEach(d => visibleDays.add(d.id));
+      } else {
+        visibleDays.delete(id);
+      }
+    } else {
+      visibleDays.add(id);
+    }
+    syncLayers();
+  });
+  // 双击：仅显示这一天
+  li.addEventListener('dblclick', () => {
+    visibleDays.clear();
+    visibleDays.add(day.id);
+    syncLayers();
+    // 缩放到这一天
+    const coords = day.points.map(p => [p.lat, p.lon]);
+    if (coords.length) {
+      map.fitBounds(L.latLngBounds(coords).pad(0.3));
+    }
+  });
+  ul.appendChild(li);
+});
+
+function syncLayers() {
+  DAYS.forEach(day => {
+    const layer = dayLayers[day.id];
+    if (visibleDays.has(day.id)) {
+      if (!map.hasLayer(layer)) map.addLayer(layer);
+    } else {
+      if (map.hasLayer(layer)) map.removeLayer(layer);
+    }
+  });
+  document.querySelectorAll('.day-item').forEach(li => {
+    const id = parseInt(li.dataset.id, 10);
+    li.classList.toggle('muted', !visibleDays.has(id));
+  });
+}
+
+// ---------- 控制按钮 ----------
+document.getElementById('btnAll').addEventListener('click', () => {
+  DAYS.forEach(d => visibleDays.add(d.id));
+  syncLayers();
+  fitToVisible();
+});
+document.getElementById('btnFit').addEventListener('click', fitToVisible);
+
+function fitToVisible() {
+  const coords = [];
+  DAYS.forEach(d => {
+    if (visibleDays.has(d.id)) {
+      d.points.forEach(p => coords.push([p.lat, p.lon]));
+    }
+  });
+  if (coords.length) {
+    map.fitBounds(L.latLngBounds(coords).pad(0.15));
+  }
+}
+
+// 启动时居中到全部
+setTimeout(fitToVisible, 100);
+</script>
+
+</body>
+</html>
