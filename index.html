@@ -325,8 +325,20 @@ const DAYS = [
     ],
   },
   {
-    id: 2, date: "5/14", dateEN: "WED", title: "大阪 → 京都 · 古城与稻荷",
+    id: 2, date: "5/14", dateEN: "WED", title: "大阪环球影城 · 整日游园",
     color: "var(--d2)", colorHex: "#8B2E2E",
+    points: [
+      { name: "ユニバーサル・スタジオ・ジャパン / 大阪环球影城 USJ",
+        lon: 135.4323185, lat: 34.6656768,
+        time: "09:00 入园",
+        note: "08:00 出发，JR 大阪环状线 → 西九条换 JR 樱岛线至 Universal City 站。强烈建议提前买 Express Pass，热门项目排队 60–220 分钟。重点：超级任天堂世界（需当日整理券）、哈利波特魔法世界、Hollywood Dream 过山车" },
+      { name: "道頓堀 晚餐 / 道顿堀", lon: 135.5030983, lat: 34.6686471,
+        time: "21:00 闭园后", note: "回程吃宵夜，金龙拉面、一兰、章鱼烧补一波" },
+    ],
+  },
+  {
+    id: 3, date: "5/15", dateEN: "THU", title: "大阪 → 京都 · 古城与稻荷",
+    color: "var(--d3)", colorHex: "#4A6B5C",
     points: [
       { name: "大阪城公園 / 大阪城公园", lon: 135.5262114, lat: 34.6864797,
         time: "08:00–10:30", note: "晨间游客少，登天守阁眺望" },
@@ -339,8 +351,8 @@ const DAYS = [
     ],
   },
   {
-    id: 3, date: "5/15", dateEN: "THU", title: "京都北线 · 三千院与贵船",
-    color: "var(--d3)", colorHex: "#4A6B5C",
+    id: 4, date: "5/16", dateEN: "FRI", title: "京都北线 · 三千院与贵船",
+    color: "var(--d4)", colorHex: "#2C3E5C",
     points: [
       { name: "三千院 / 三千院", lon: 135.8344058, lat: 35.119726,
         time: "09:00", note: "07:30 出发，大原山中，苔庭与地藏菩萨" },
@@ -351,8 +363,8 @@ const DAYS = [
     ],
   },
   {
-    id: 4, date: "5/16", dateEN: "FRI", title: "京都 → 东京 · 一日双城",
-    color: "var(--d4)", colorHex: "#2C3E5C",
+    id: 5, date: "5/17", dateEN: "SAT", title: "京都 → 东京 · 一日双城",
+    color: "var(--d5)", colorHex: "#6B4C7A",
     points: [
       { name: "清水寺 / 清水寺", lon: 135.784661, lat: 34.9946662,
         time: "07:00", note: "晨间早入避人潮，本堂悬空舞台" },
@@ -371,8 +383,8 @@ const DAYS = [
     ],
   },
   {
-    id: 5, date: "5/17", dateEN: "SAT", title: "东京东线 · 浅草至涩谷",
-    color: "var(--d5)", colorHex: "#6B4C7A",
+    id: 6, date: "5/18", dateEN: "SUN", title: "东京东线 · 浅草至涩谷",
+    color: "var(--d6)", colorHex: "#8B5A2B",
     points: [
       { name: "雷門 / 雷门", lon: 139.7963656, lat: 35.7111163,
         time: "08:00", note: "08:00 早到避人潮，浅草寺地标大灯笼" },
@@ -384,16 +396,6 @@ const DAYS = [
         time: "傍晚", note: "世界最繁忙的人行横道" },
       { name: "Shibuya Sky", lon: 139.7019848, lat: 35.6586719,
         time: "日落前 1h", note: "需提前预约，日落最佳时刻" },
-    ],
-  },
-  {
-    id: 6, date: "5/18", dateEN: "SUN", title: "东京迪士尼 · 整日游园",
-    color: "var(--d6)", colorHex: "#8B5A2B",
-    points: [
-      { name: "東京ディズニーランド / 迪士尼乐园", lon: 139.8803943, lat: 35.6328964,
-        time: "09:00 入园", note: "经典童话主题，开园冲热门项目（Disneyland 与海洋二选一）" },
-      { name: "東京ディズニーシー / 迪士尼海洋", lon: 139.8850779, lat: 35.6267108,
-        time: "09:00 入园", note: "世界唯一，沉浸感最强（Disneyland 与海洋二选一）" },
     ],
   },
   {
